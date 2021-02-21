@@ -1,0 +1,36 @@
+CC		:= g++
+#CC		:= clang++
+C_FLAGS := -Wall -Wextra -O3 -g -D LINUX
+
+BIN		:= bin
+OBJ		:= obj
+SRC		:= RayCaster
+INCLUDE	:= include
+SDL2	:= /usr/include/SDL2
+LIB		:= 
+PCH		:= src/raycaster.hpp
+
+LIBRARIES	:= -pthread -latomic -lSDL2 -lstdc++fs -lm
+
+EXECUTABLE	:= raycaster
+
+src = $(wildcard $(SRC)/*.cpp)
+obj = $(addprefix $(OBJ)/, $(notdir $(src:.cpp=.o)))
+
+all: $(BIN)/$(EXECUTABLE)
+
+clean:
+	$(RM) $(BIN)/$(EXECUTABLE)
+	$(RM) $(OBJ)/*.o
+
+pch:
+	$(CC) $(C_FLAGS) -I$(INCLUDE) -w $(PCH)
+
+run: all
+	./$(BIN)/$(EXECUTABLE)
+
+$(OBJ)/%.o: $(SRC)/%.cpp
+	$(CC) $(C_FLAGS) -I$(INCLUDE) -I$(SDL2) -o $@ -c $<
+
+$(BIN)/$(EXECUTABLE): $(obj)
+	$(CC) $(C_FLAGS) -I$(INCLUDE) -I$(SDL2) $^ -o $@ $(LIBRARIES)

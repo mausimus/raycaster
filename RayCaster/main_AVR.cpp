@@ -1,4 +1,6 @@
-﻿#include <Arduino.h>
+﻿#ifdef ARDUINO_AVR_UNO
+
+#include <Arduino.h>
 
 #include "RayCaster.h"
 #include "RayCasterData.h"
@@ -74,3 +76,5 @@ int main(void)
 
     return 0;
 }
+
+#endif

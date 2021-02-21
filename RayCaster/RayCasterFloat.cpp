@@ -1,5 +1,7 @@
 // floating-point implementation for testing/comparison
 
+#ifndef MSDOS
+
 #define _USE_MATH_DEFINES
 
 #include "RayCasterFloat.h"
@@ -156,7 +158,7 @@ float RayCasterFloat::Distance(float playerX, float playerY, float rayA, float* 
 }
 
 void RayCasterFloat::Trace(
-    uint16_t screenX, uint8_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint16_t* textureY, uint16_t* textureStep)
+    uint32_t screenX, uint8_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep)
 {
 	float hitOffset;
     int   hitDirection;
@@ -188,7 +190,7 @@ void RayCasterFloat::Trace(
     }
 }
 
-void RayCasterFloat::Start(uint16_t playerX, uint16_t playerY, int16_t playerA)
+void RayCasterFloat::Start(uint32_t playerX, uint32_t playerY, int32_t playerA)
 {
     _playerX = (playerX / 1024.0f) * 4.0f;
     _playerY = (playerY / 1024.0f) * 4.0f;
@@ -198,3 +200,4 @@ void RayCasterFloat::Start(uint16_t playerX, uint16_t playerY, int16_t playerA)
 RayCasterFloat::RayCasterFloat() : RayCaster() {}
 
 RayCasterFloat::~RayCasterFloat() {}
+#endif

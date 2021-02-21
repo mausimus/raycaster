@@ -1,3 +1,5 @@
+#if defined(LINUX) || defined(WIN32)
+
 #include "Game.h"
 #include "RayCaster.h"
 #include "RayCasterFixed.h"
@@ -14,7 +16,7 @@ bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirecti
 
 using namespace std;
 
-int main(int argc, char* args[])
+int main(int /*argc*/, char* /*args*/[])
 {
     if(SDL_Init(SDL_INIT_VIDEO) < 0)
     {
@@ -138,3 +140,4 @@ bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirecti
     }
     return false;
 }
+#endif

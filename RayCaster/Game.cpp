@@ -1,6 +1,7 @@
 #define _USE_MATH_DEFINES
 
 #include <cstdlib>
+#include "math.h"
 
 #include "Game.h"
 #include "RayCaster.h"

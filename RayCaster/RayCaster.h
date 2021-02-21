@@ -2,19 +2,29 @@
 
 #include <stdint.h>
 
+#ifdef MSDOS
+#define M_PI 3.1415926
+#define TABLES_320
+#define SCREEN_WIDTH (uint32_t)320
+#define SCREEN_HEIGHT (uint32_t)200
+#define LOOKUP_TBL
+#define LOOKUP8(tbl, offset) tbl[offset]
+#define LOOKUP16(tbl, offset) tbl[offset]
+#define __LOOKUP8(tbl, offset) pgm_read_byte_near((tbl) + (offset))
+#define __LOOKUP16(tbl, offset) pgm_read_word_near((tbl) + (offset))
+#endif
+
 #ifdef ARDUINO_AVR_UNO
-
 #include <Arduino.h>
-
 #define TABLES_160
 #define SCREEN_WIDTH (uint16_t)160
 #define SCREEN_HEIGHT (uint16_t)128
 #define LOOKUP_TBL PROGMEM
 #define LOOKUP8(tbl, offset) pgm_read_byte_near((tbl) + (offset))
 #define LOOKUP16(tbl, offset) pgm_read_word_near((tbl) + (offset))
+#endif
 
-#else
-
+#if defined(LINUX) || defined(WIN32)
 #define TABLES_320
 #define SCREEN_WIDTH (uint16_t)320
 #define SCREEN_HEIGHT (uint16_t)256
@@ -24,7 +34,6 @@
 #define LOOKUP_TBL
 #define LOOKUP8(tbl, offset) tbl[offset]
 #define LOOKUP16(tbl, offset) tbl[offset]
-
 #endif
 
 #define MAP_X (uint8_t)32
@@ -39,10 +48,10 @@
 class RayCaster
 {
 public:
-    virtual void Start(uint16_t playerX, uint16_t playerY, int16_t playerA) = 0;
+    virtual void Start(uint32_t playerX, uint32_t playerY, int32_t playerA) = 0;
 
     virtual void
-    Trace(uint16_t screenX, uint8_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint16_t* textureY, uint16_t* textureStep) = 0;
+    Trace(uint32_t screenX, uint8_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep) = 0;
 
     RayCaster();
 
