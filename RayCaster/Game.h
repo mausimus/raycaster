@@ -5,9 +5,9 @@
 class Game
 {
 public:
-    void Move(int m, int r, float seconds);
+    void Move(int m, int r, int z, float seconds);
 
-    float playerX, playerY, playerA;
+    float playerX, playerY, playerZ, playerA;
 
     Game();
     ~Game();

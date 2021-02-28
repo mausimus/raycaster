@@ -9,7 +9,7 @@ class RayCasterFloat : public RayCaster
 {
 public:
     void Start(uint32_t playerX, uint32_t playerY, int32_t playerA);
-    std::vector<std::tuple<uint32_t, uint8_t, uint8_t>> Trace(uint32_t screenX/*, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX*//*, uint32_t* textureY, uint32_t* textureStep*/);
+    std::vector<RayCaster::TraceHit> Trace(uint32_t screenX);
 
     RayCasterFloat();
     ~RayCasterFloat();
@@ -19,6 +19,17 @@ private:
     float _playerY;
     float _playerA;
 
-    std::vector<std::tuple<float, float, int>> Distance(float playerX, float playerY, float rayA/*, float* hitOffset, int* hitDirection*/);
+    struct DistanceHit {
+        DistanceHit(float distance, float hitOffset, int hitDirection, bool isExit) :
+         distance(distance), hitOffset(hitOffset), hitDirection(hitDirection), isExit(isExit)
+        {
+        }
+        float distance;
+        float hitOffset;
+        int hitDirection;
+        bool isExit;
+    };
+
+    std::vector<DistanceHit> Distance(float playerX, float playerY, float rayA);
     bool  IsWall(float rayX, float rayY, float rayA, bool *isEdge);
 };

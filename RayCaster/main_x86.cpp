@@ -1,18 +1,18 @@
 #if defined(LINUX) || defined(WIN32)
 
-#include "Game.h"
-#include "RayCaster.h"
-#include "RayCasterFixed.h"
-#include "RayCasterFloat.h"
-#include "RayCasterPrecalculator.h"
-#include "Renderer.h"
-#include <SDL.h>
-#include <fstream>
-#include <iostream>
-#include <stdio.h>
+#    include "Game.h"
+#    include "RayCaster.h"
+#    include "RayCasterFixed.h"
+#    include "RayCasterFloat.h"
+#    include "RayCasterPrecalculator.h"
+#    include "Renderer.h"
+#    include <SDL.h>
+#    include <fstream>
+#    include <iostream>
+#    include <stdio.h>
 
 void DrawBuffer(SDL_Renderer* sdlRenderer, SDL_Texture* sdlTexture, uint32_t* frameBuffer, int deltaX);
-bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection);
+bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection);
 
 using namespace std;
 
@@ -37,18 +37,19 @@ int main(int /*argc*/, char* /*args*/[])
         }
         else
         {
-            Game              game;
-            RayCasterFloat    floatCaster;
-            Renderer          floatRenderer(&floatCaster);
-            uint32_t          floatBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+            Game           game;
+            RayCasterFloat floatCaster;
+            Renderer       floatRenderer(&floatCaster);
+            uint32_t       floatBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
             /*RayCasterFixed    fixedCaster;
             Renderer          fixedRenderer(&fixedCaster);
             uint32_t          fixedBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];*/
-            int               moveDirection   = 0;
-            int               rotateDirection = 0;
-            bool              isExiting       = false;
-            const static auto tickFrequency   = SDL_GetPerformanceFrequency();
-            auto              tickCounter     = SDL_GetPerformanceCounter();
+            int               moveDirection     = 0;
+            int               rotateDirection   = 0;
+            int               verticalDirection = 0;
+            bool              isExiting         = false;
+            const static auto tickFrequency     = SDL_GetPerformanceFrequency();
+            auto              tickCounter       = SDL_GetPerformanceCounter();
             SDL_Event         event;
 
             SDL_Renderer* sdlRenderer = SDL_CreateRenderer(sdlWindow, -1, SDL_RENDERER_ACCELERATED);
@@ -71,12 +72,12 @@ int main(int /*argc*/, char* /*args*/[])
 
                 if(SDL_PollEvent(&event))
                 {
-                    isExiting = ProcessEvent(event, &moveDirection, &rotateDirection);
+                    isExiting = ProcessEvent(event, &moveDirection, &rotateDirection, &verticalDirection);
                 }
                 const auto nextCounter = SDL_GetPerformanceCounter();
                 const auto seconds     = (nextCounter - tickCounter) / static_cast<float>(tickFrequency);
                 tickCounter            = nextCounter;
-                game.Move(moveDirection, rotateDirection, seconds);
+                game.Move(moveDirection, rotateDirection, verticalDirection, seconds);
             }
             SDL_DestroyTexture(floatTexture);
             SDL_DestroyTexture(fixedTexture);
@@ -107,7 +108,7 @@ void DrawBuffer(SDL_Renderer* sdlRenderer, SDL_Texture* sdlTexture, uint32_t* fb
     SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, &r);
 }
 
-bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection)
+bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection)
 {
     if(event.type == SDL_QUIT)
     {
@@ -133,6 +134,12 @@ bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirecti
             break;
         case SDLK_RIGHT:
             *rotateDirection = p ? 1 : 0;
+            break;
+        case SDLK_a:
+            *verticalDirection = p ? 1 : 0;
+            break;
+        case SDLK_z:
+            *verticalDirection = p ? -1 : 0;
             break;
         default:
             break;

@@ -52,7 +52,19 @@ class RayCaster
 public:
     virtual void Start(uint32_t playerX, uint32_t playerY, int32_t playerA) = 0;
 
-    virtual std::vector<std::tuple<uint32_t, uint8_t, uint8_t>> Trace(uint32_t screenX/*, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX*//*, uint32_t* textureY, uint32_t* textureStep*/) = 0;
+    struct TraceHit
+    {
+        TraceHit(uint32_t screenY, uint8_t textureNo, uint8_t textureX, bool isExit) : screenY(screenY), textureNo(textureNo), textureX(textureX),
+        isExit(isExit)
+        {}
+
+        uint32_t screenY;
+        uint8_t textureNo;
+        uint8_t textureX;
+        bool isExit;
+    };
+
+    virtual std::vector<TraceHit> Trace(uint32_t screenX/*, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX*//*, uint32_t* textureY, uint32_t* textureStep*/) = 0;
 
     RayCaster();
 
