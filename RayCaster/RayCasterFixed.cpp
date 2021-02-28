@@ -1,5 +1,5 @@
 // fixed-point implementation
-
+#if(FALSE)
 #include "RayCasterFixed.h"
 #include "RayCasterData.h"
 
@@ -332,3 +332,4 @@ void RayCasterFixed::Start(uint32_t playerX, uint32_t playerY, int32_t playerA)
 RayCasterFixed::RayCasterFixed() : RayCaster() {}
 
 RayCasterFixed::~RayCasterFixed() {}
+#endif

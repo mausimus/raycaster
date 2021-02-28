@@ -12,16 +12,16 @@ void Renderer::PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t tex
         return;
     }
 
-    uint32_t* lineBuffer = frameBuffer + x;
-    uint32_t  textureY   = 0;
-    int visibleSize = wallHeight; // size of wall after screen clipping
+    uint32_t* lineBuffer  = frameBuffer + x;
+    uint32_t  textureY    = 0;
+    int       visibleSize = wallHeight; // size of wall after screen clipping
     uint32_t  textureStep;
-    uint32_t topOffset; // wall offset from the top
+    uint32_t  topOffset; // wall offset from the top
 
-    textureStep          = ((256 * 256) / wallHeight);
+    textureStep = ((256 * 256) / wallHeight);
 
     // trim wall to visible
-    auto textureTop = centerLine - (int)(wallHeight / 2);
+    auto textureTop    = centerLine - (int)(wallHeight / 2);
     auto textureBottom = centerLine + (int)(wallHeight / 2);
     if(textureTop < 0)
     {
@@ -38,8 +38,8 @@ void Renderer::PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t tex
         visibleSize -= (textureBottom - SCREEN_HEIGHT);
     }
 
-    const auto texelX = static_cast<int>(textureX >> 2);
-    uint32_t texturePos = textureY;
+    const auto texelX     = static_cast<int>(textureX >> 2);
+    uint32_t   texturePos = textureY;
 
     // paint wall
     lineBuffer += SCREEN_WIDTH * topOffset;
@@ -73,28 +73,29 @@ void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
 
     for(int x = 0; x < SCREEN_WIDTH; x++)
     {
-        uint32_t  screenY; // div/2
-        uint8_t  textureX;
-        uint8_t  textureNo;
-        uint32_t textureY;
-        uint32_t textureStep;
+        auto traces = _rc->Trace(x);
 
-        _rc->Trace(x, &screenY, &textureNo, &textureX, &textureY, &textureStep);
+        for(auto it = traces.rbegin(); it != traces.rend(); it++)
+        {
+            uint32_t screenY = std::get<0>(*it);
+            uint8_t  textureNo = std::get<1>(*it);
+            uint8_t  textureX = std::get<2>(*it);
 
-        // eye-level
-        PaintWall(x, HORIZON_HEIGHT, (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
+            // eye-level
+            PaintWall(x, HORIZON_HEIGHT, (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
 
-        // 1 above eye level
-        //PaintWall(x, HORIZON_HEIGHT - ((2 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
+            // 1 above eye level
+            //PaintWall(x, HORIZON_HEIGHT - ((2 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
 
-        // 2 above eye level
-        PaintWall(x, HORIZON_HEIGHT - ((4 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
+            // 2 above eye level
+            PaintWall(x, HORIZON_HEIGHT - ((4 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
 
-        // 1 below eye level
-        //PaintWall(x, HORIZON_HEIGHT + ((2 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
+            // 1 below eye level
+            //PaintWall(x, HORIZON_HEIGHT + ((2 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
 
-        // 2 below eye level
-        PaintWall(x, HORIZON_HEIGHT + ((4 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
+            // 2 below eye level
+            PaintWall(x, HORIZON_HEIGHT + ((4 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
+        }
     }
 }
 

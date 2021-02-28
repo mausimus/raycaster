@@ -1,4 +1,5 @@
 #pragma once
+#if(FALSE)
 #include "RayCaster.h"
 class RayCasterFixed : public RayCaster
 {
@@ -24,3 +25,4 @@ private:
     static uint32_t MulU(uint8_t v, uint32_t f);
     static int32_t  MulS(uint8_t v, int32_t f);
 };
+#endif

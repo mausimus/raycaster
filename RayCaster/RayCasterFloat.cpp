@@ -2,12 +2,12 @@
 
 #ifndef MSDOS
 
-#define _USE_MATH_DEFINES
+#    define _USE_MATH_DEFINES
 
-#include "RayCasterFloat.h"
-#include <math.h>
+#    include "RayCasterFloat.h"
+#    include <math.h>
 
-bool RayCasterFloat::IsWall(float rayX, float rayY, float rayA)
+bool RayCasterFloat::IsWall(float rayX, float rayY, float rayA, bool* isEdge)
 {
     float mapX    = 0;
     float mapY    = 0;
@@ -18,13 +18,19 @@ bool RayCasterFloat::IsWall(float rayX, float rayY, float rayA)
 
     if(tileX < 0 || tileY < 0 || tileX >= MAP_X - 1 || tileY >= MAP_Y - 1)
     {
+        *isEdge = true;
         return true;
     }
+    *isEdge = false;
     return g_map[(tileX >> 3) + (tileY << (MAP_XS - 3))] & (1 << (8 - (tileX & 0x7)));
 }
 
-float RayCasterFloat::Distance(float playerX, float playerY, float rayA, float* hitOffset, int* hitDirection)
+std::vector<std::tuple<float, float, int>>
+RayCasterFloat::Distance(float playerX, float playerY, float rayA /*, float* hitOffset, int* hitDirection*/)
 {
+    std::vector<std::tuple<float, float, int>> hits;
+    int                                        numSteps = 0;
+
     while(rayA < 0)
     {
         rayA += 2.0f * M_PI;
@@ -111,6 +117,7 @@ float RayCasterFloat::Distance(float playerX, float playerY, float rayA, float* 
     bool  somethingDone = false;
     int   isTop         = 0;
     int   isRight       = 0;
+    bool  isEdge        = false;
 
     do
     {
@@ -119,14 +126,24 @@ float RayCasterFloat::Distance(float playerX, float playerY, float rayA, float* 
         {
             somethingDone = true;
             tileX += tileStepX;
-            if(IsWall(tileX, interceptY, rayA))
+            if(IsWall(tileX, interceptY, rayA, &isEdge))
             {
-                verticalHit   = true;
-                rayX          = tileX + (tileStepX == -1 ? 1 : 0);
-                rayY          = interceptY;
-                *hitOffset    = interceptY;
-                *hitDirection = true;
-                break;
+                if(isEdge)
+                    break;
+
+                //verticalHit  = true;
+                auto hitRayX = tileX + (tileStepX == -1 ? 1 : 0);
+                auto hitRayY = interceptY;
+                //*hitOffset    = interceptY;
+                //*hitDirection = true;
+
+                float deltaX = hitRayX - playerX;
+                float deltaY = hitRayY - playerY;
+                auto  dist   = sqrt(deltaX * deltaX + deltaY * deltaY);
+
+                hits.push_back(std::make_tuple(dist, interceptY, 1));
+
+                //              break;
             }
             interceptY += stepY;
         }
@@ -134,50 +151,79 @@ float RayCasterFloat::Distance(float playerX, float playerY, float rayA, float* 
         {
             somethingDone = true;
             tileY += tileStepY;
-            if(IsWall(interceptX, tileY, rayA))
+            if(IsWall(interceptX, tileY, rayA, &isEdge))
             {
-                horizontalHit = true;
-                rayX          = interceptX;
-                *hitOffset    = interceptX;
-                *hitDirection = 0;
-                rayY          = tileY + (tileStepY == -1 ? 1 : 0);
-                break;
+                if(isEdge)
+                    break;
+
+                //horizontalHit = true;
+                auto hitRayX  = interceptX;
+                //*hitOffset    = interceptX;
+                //*hitDirection = 0;
+                auto hitRayY = tileY + (tileStepY == -1 ? 1 : 0);
+
+                float deltaX = hitRayX - playerX;
+                float deltaY = hitRayY - playerY;
+                auto  dist   = sqrt(deltaX * deltaX + deltaY * deltaY);
+
+                hits.push_back(std::make_tuple(dist, interceptX, 0));
+                //                break;
             }
             interceptX += stepX;
         }
-    } while((!horizontalHit && !verticalHit) && somethingDone);
+    } while(!isEdge && numSteps++ < 15 /*(!horizontalHit && !verticalHit) && somethingDone*/);
 
-    if(!somethingDone)
+    /*if(!somethingDone)
     {
-        return 0;
-    }
+        return hits;
+    }*/
 
-    float deltaX = rayX - playerX;
+    /*float deltaX = rayX - playerX;
     float deltaY = rayY - playerY;
-    return sqrt(deltaX * deltaX + deltaY * deltaY);
+    return sqrt(deltaX * deltaX + deltaY * deltaY);*/
+
+    return hits;
 }
 
-void RayCasterFloat::Trace(
-    uint32_t screenX, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep)
+std::vector<std::tuple<uint32_t, uint8_t, uint8_t>> RayCasterFloat::Trace(
+    uint32_t screenX /*, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX*/ /*, uint32_t* textureY, uint32_t* textureStep*/)
 {
-	float hitOffset;
-    int   hitDirection;
-    float deltaAngle   = atanf(((int16_t)screenX - SCREEN_WIDTH / 2.0f) / (SCREEN_WIDTH / 2.0f) * M_PI / 4);
-    float lineDistance = Distance(_playerX, _playerY, _playerA + deltaAngle, &hitOffset, &hitDirection);
-    float distance     = lineDistance * cos(deltaAngle);
-    float dum;
-    *textureX    = (uint8_t)(256.0f * modff(hitOffset, &dum));
-    *textureNo   = hitDirection;
-    *textureY    = 0;
-    *textureStep = 0;
-    if(distance > 0)
+    std::vector<std::tuple<uint32_t, uint8_t, uint8_t>> traces;
+
+    float deltaAngle = atanf(((int16_t)screenX - SCREEN_WIDTH / 2.0f) / (SCREEN_WIDTH / 2.0f) * M_PI / 4);
+
+    auto hits = Distance(_playerX, _playerY, _playerA + deltaAngle);
+    if(!hits.size())
     {
-        *screenY = 256 * (INV_FACTOR / distance);
+        //screenY = 0;
+        return traces;
     }
-    else
+
+    for(auto hit : hits)
     {
-        *screenY = 0;
+//        auto  firstHit     = *hits.begin();
+        float lineDistance = std::get<0>(hit);
+        float hitOffset    = std::get<1>(hit);
+        int   hitDirection = std::get<2>(hit);
+        uint32_t screenY;
+
+        float distance = lineDistance * cos(deltaAngle);
+        float dum;
+        uint8_t textureX  = (uint8_t)(256.0f * modff(hitOffset, &dum));
+        //*textureNo = hitDirection;
+        if(distance > 0)
+        {
+            screenY = 256 * (INV_FACTOR / distance);
+        }
+        else
+        {
+            screenY = 0;
+        }
+
+        traces.push_back(std::make_tuple(screenY, hitDirection, textureX));
     }
+
+    return traces;
 }
 
 void RayCasterFloat::Start(uint32_t playerX, uint32_t playerY, int32_t playerA)
@@ -187,7 +233,7 @@ void RayCasterFloat::Start(uint32_t playerX, uint32_t playerY, int32_t playerA)
     _playerA = (playerA / 1024.0f) * 2.0f * M_PI;
 }
 
-RayCasterFloat::RayCasterFloat() : RayCaster() {}
+RayCasterFloat::RayCasterFloat() : RayCaster() { }
 
-RayCasterFloat::~RayCasterFloat() {}
+RayCasterFloat::~RayCasterFloat() { }
 #endif

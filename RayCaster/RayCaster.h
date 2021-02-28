@@ -1,6 +1,8 @@
 #pragma once
 
 #include <stdint.h>
+#include <vector>
+#include <tuple>
 
 #ifdef MSDOS
 #define M_PI 3.1415926
@@ -50,8 +52,7 @@ class RayCaster
 public:
     virtual void Start(uint32_t playerX, uint32_t playerY, int32_t playerA) = 0;
 
-    virtual void
-    Trace(uint32_t screenX, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep) = 0;
+    virtual std::vector<std::tuple<uint32_t, uint8_t, uint8_t>> Trace(uint32_t screenX/*, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX*//*, uint32_t* textureY, uint32_t* textureStep*/) = 0;
 
     RayCaster();
 

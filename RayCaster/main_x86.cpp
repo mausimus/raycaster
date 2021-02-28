@@ -41,9 +41,9 @@ int main(int /*argc*/, char* /*args*/[])
             RayCasterFloat    floatCaster;
             Renderer          floatRenderer(&floatCaster);
             uint32_t          floatBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
-            RayCasterFixed    fixedCaster;
+            /*RayCasterFixed    fixedCaster;
             Renderer          fixedRenderer(&fixedCaster);
-            uint32_t          fixedBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];
+            uint32_t          fixedBuffer[SCREEN_WIDTH * SCREEN_HEIGHT];*/
             int               moveDirection   = 0;
             int               rotateDirection = 0;
             bool              isExiting       = false;
