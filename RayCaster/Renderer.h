@@ -8,6 +8,8 @@ class Renderer
     RayCaster* _rc;
     Game*      _g;
 
+    void PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t textureNo, uint8_t textureX, uint32_t* frameBuffer);
+
     inline static uint32_t GetARGB(uint8_t brightness)
     {
         return (brightness << 16) + (brightness << 8) + brightness;

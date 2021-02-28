@@ -158,7 +158,7 @@ float RayCasterFloat::Distance(float playerX, float playerY, float rayA, float* 
 }
 
 void RayCasterFloat::Trace(
-    uint32_t screenX, uint8_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep)
+    uint32_t screenX, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep)
 {
 	float hitOffset;
     int   hitDirection;
@@ -172,17 +172,7 @@ void RayCasterFloat::Trace(
     *textureStep = 0;
     if(distance > 0)
     {
-        *screenY = INV_FACTOR / distance;
-        auto txs = (*screenY * 2.0f);
-        if(txs != 0)
-        {
-            *textureStep = (256 / txs) * 256;
-            if(txs > SCREEN_HEIGHT)
-            {
-                auto wallHeight = (txs - SCREEN_HEIGHT) / 2;
-                *textureY       = wallHeight * (256 / txs) * 256;
-            }
-        }
+        *screenY = 256 * (INV_FACTOR / distance);
     }
     else
     {

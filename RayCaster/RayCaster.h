@@ -51,7 +51,7 @@ public:
     virtual void Start(uint32_t playerX, uint32_t playerY, int32_t playerA) = 0;
 
     virtual void
-    Trace(uint32_t screenX, uint8_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep) = 0;
+    Trace(uint32_t screenX, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep) = 0;
 
     RayCaster();
 

@@ -62,10 +62,10 @@ int main(int /*argc*/, char* /*args*/[])
             while(!isExiting)
             {
                 floatRenderer.TraceFrame(&game, floatBuffer);
-                fixedRenderer.TraceFrame(&game, fixedBuffer);
+                //fixedRenderer.TraceFrame(&game, fixedBuffer);
 
                 DrawBuffer(sdlRenderer, floatTexture, floatBuffer, 0);
-                DrawBuffer(sdlRenderer, fixedTexture, fixedBuffer, SCREEN_WIDTH + 1);
+                //DrawBuffer(sdlRenderer, fixedTexture, fixedBuffer, SCREEN_WIDTH + 1);
 
                 SDL_RenderPresent(sdlRenderer);
 

@@ -232,7 +232,7 @@ WallHit:
 // (playerX, playerY) is 8 box coordinate bits, 8 inside coordinate bits
 // (playerA) is full circle as 1024
 void RayCasterFixed::Trace(
-    uint32_t screenX, uint8_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep)
+    uint32_t screenX, uint32_t* screenY, uint8_t* textureNo, uint8_t* textureX, uint32_t* textureY, uint32_t* textureStep)
 {
     uint32_t rayAngle = static_cast<uint32_t>(_playerA + LOOKUP16(g_deltaAngle, screenX));
 
@@ -308,7 +308,9 @@ void RayCasterFixed::Trace(
     if(distance >= MIN_DIST)
     {
         *textureY = 0;
-        LookupHeight((distance - MIN_DIST) >> 2, screenY, textureStep);
+        uint8_t screenY8;
+        LookupHeight((distance - MIN_DIST) >> 2, &screenY8, textureStep);
+        *screenY = screenY8 << 8;
     }
     else
     {
