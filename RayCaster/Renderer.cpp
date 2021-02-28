@@ -84,50 +84,30 @@ void Renderer::PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t tex
     }
 }
 
-void Renderer::PaintLowerLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, uint32_t* frameBuffer, int* point)
+// paint wall and connect floor/ceiling
+void Renderer::PaintLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, uint32_t* frameBuffer, int* previousPoint)
 {
     uint32_t screenY   = hit.screenY;
     uint8_t  textureNo = hit.textureNo;
     uint8_t  textureX  = hit.textureX;
 
-    auto pointTop = HORIZON_HEIGHT + ((2 * verticalOffset * (int)screenY) / 256) - ((screenY * 2) >> 8) / 2;
-    if(*point != -1)
+    auto direction  = verticalOffset >= 0 ? 1 : -1;
+    auto centerLine = static_cast<int>(HORIZON_HEIGHT + ((2 * verticalOffset * (int)screenY) / 256.0f));
+    auto pointTop   = centerLine - direction * (((int)screenY * 2) / 256) / 2;
+    if(*previousPoint != -1)
     {
-        PaintFloor(x, pointTop, *point, frameBuffer);
+        PaintFloor(x, pointTop, *previousPoint, frameBuffer);
     }
 
     if(hit.isExit)
     {
-        *point = pointTop;
+        *previousPoint = pointTop;
     }
     else
     {
-        *point = -1;
+        *previousPoint = -1;
     }
     PaintWall(x, HORIZON_HEIGHT + ((2 * verticalOffset * (int)screenY) / 256), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
-}
-
-void Renderer::PaintUpperLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, uint32_t* frameBuffer, int* point)
-{
-    uint32_t screenY   = hit.screenY;
-    uint8_t  textureNo = hit.textureNo;
-    uint8_t  textureX  = hit.textureX;
-
-    auto pointBottom = HORIZON_HEIGHT - ((2 * verticalOffset * (int)screenY) / 256) + ((screenY * 2) >> 8) / 2;
-    if(*point != -1)
-    {
-        PaintFloor(x, pointBottom, *point, frameBuffer);
-    }
-
-    if(hit.isExit)
-    {
-        *point = pointBottom;
-    }
-    else
-    {
-        *point = -1;
-    }
-    PaintWall(x, HORIZON_HEIGHT - ((2 * verticalOffset * (int)screenY) / 256), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
 }
 
 void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
@@ -143,76 +123,22 @@ void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
 
     for(int x = 0; x < SCREEN_WIDTH; x++)
     {
-        auto traces   = _rc->Trace(x);
-        int  em0point = -1;
-        int  em2point = -1;
-        int  ep2point = -1;
+        auto traces = _rc->Trace(x);
+
+        // floor/ceiling tracking per level
+        int drawLevel[5];
+        drawLevel[0] = drawLevel[1] = drawLevel[2] = drawLevel[3] = drawLevel[4] = -1;
+        int* centerLevel = drawLevel + 2;
 
         for(auto it = traces.rbegin(); it != traces.rend(); it++)
         {
-            //PaintLevel(x, 0, *it, frameBuffer, &em0point);
             uint32_t screenY   = it->screenY;
             uint8_t  textureNo = it->textureNo;
             uint8_t  textureX  = it->textureX;
 
-            // eye-level
-            //PaintWall(x, HORIZON_HEIGHT, (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
-            if(baseOffset > 0)
-            {
-                PaintLowerLevel(x, baseOffset, *it, frameBuffer, &em0point);
-            }
-            else
-            {
-                PaintUpperLevel(x, -baseOffset, *it, frameBuffer, &em0point);
-            }
-            PaintUpperLevel(x, -baseOffset + 2, *it, frameBuffer, &ep2point);
-            PaintLowerLevel(x, baseOffset + 2, *it, frameBuffer, &em2point);
-            /*
-
-            // 1 above eye level
-            //PaintWall(x, HORIZON_HEIGHT - ((2 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
-
-            // 2 above eye level
-            {
-                auto pointBottom = HORIZON_HEIGHT - ((4 * (int)screenY) >> 8) + ((screenY * 2) >> 8) / 2;
-                if(ep2point != -1)
-                {
-                    PaintFloor(x, pointBottom, ep2point, frameBuffer);
-                }
-
-                if(it->isExit)
-                {
-                    ep2point = pointBottom;
-                }
-                else
-                {
-                    ep2point = -1;
-                }
-                PaintWall(x, HORIZON_HEIGHT - ((4 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
-            }
-
-            // 1 below eye level
-            //PaintWall(x, HORIZON_HEIGHT + ((2 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
-
-            // 2 below eye level
-            {
-                auto pointTop = HORIZON_HEIGHT + ((4 * (int)screenY) >> 8) - ((screenY * 2) >> 8) / 2;
-                if(em2point != -1)
-                {
-                    PaintFloor(x, pointTop, em2point, frameBuffer);
-                }
-
-                if(it->isExit)
-                {
-                    em2point = pointTop;
-                }
-                else
-                {
-                    em2point = -1;
-                }
-                PaintWall(x, HORIZON_HEIGHT + ((4 * (int)screenY) >> 8), (screenY * 2) >> 8, textureNo, textureX, frameBuffer);
-            }
-            */
+            PaintLevel(x, baseOffset + 2, *it, frameBuffer, centerLevel + 2);
+            PaintLevel(x, baseOffset - 2, *it, frameBuffer, centerLevel - 2);
+            PaintLevel(x, baseOffset, *it, frameBuffer, centerLevel);
         }
     }
 }

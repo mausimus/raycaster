@@ -1,6 +1,6 @@
 CC		:= g++
 #CC		:= clang++
-C_FLAGS := -Wall -Wextra -O3 -g -D LINUX
+C_FLAGS := -Wall -Wextra -g -D LINUX
 
 BIN		:= bin
 OBJ		:= obj

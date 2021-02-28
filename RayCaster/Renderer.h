@@ -10,8 +10,7 @@ class Renderer
 
     void PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t textureNo, uint8_t textureX, uint32_t* frameBuffer);
     void PaintFloor(int x, int startY, int endY, uint32_t* frameBuffer);
-    void PaintUpperLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, uint32_t* frameBuffer, int* point);
-    void PaintLowerLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, uint32_t* frameBuffer, int* point);
+    void PaintLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, uint32_t* frameBuffer, int* point);
 
     inline static uint32_t GetARGB(uint8_t brightness)
     {
