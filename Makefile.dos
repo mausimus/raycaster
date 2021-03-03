@@ -1,6 +1,6 @@
 CC		:= /usr/local/djgpp/bin/i586-pc-msdosdjgpp-g++
-ASMFLAG :=
-C_FLAGS := -Wall -Wextra -g -D MSDOS -O3 -m32 -march=i386 -mtune=i386 -fomit-frame-pointer -funroll-loops -fforce-addr $(ASMFLAG)
+DOSBOX	:= dosbox-debug
+C_FLAGS = -Wall -Wextra -g -D MSDOS -O3 -m32 -march=i386 -mtune=i386 -fomit-frame-pointer -funroll-loops -fforce-addr
 
 BIN		:= bin
 OBJ		:= obj
@@ -14,22 +14,24 @@ EXECUTABLE	:= raycastr.exe
 
 src = $(wildcard $(SRC)/*.cpp)
 obj = $(addprefix $(OBJ)/, $(notdir $(src:.cpp=.o)))
+asm = $(addprefix $(OBJ)/, $(notdir $(src:.cpp=.S)))
 
 all: $(BIN)/$(EXECUTABLE)
 
 clean:
 	$(RM) $(BIN)/$(EXECUTABLE)
 	$(RM) $(OBJ)/*.o
-
-pch:
-	$(CC) $(C_FLAGS) -I$(INCLUDE) -w
+	$(RM) $(OBJ)/*.S
 
 run: all
-	dosbox-debug $(BIN)/$(EXECUTABLE) -conf RayCaster/dosbox.conf
+	$(DOSBOX) $(BIN)/$(EXECUTABLE) -conf RayCaster/dosbox.conf
 	@echo Executing 'run: all' complete!
 
-asm: ASMFLAG = -S
-asm: all
+asm: $(asm)
+
+
+$(OBJ)/%.S: $(SRC)/%.cpp
+	$(CC) $(C_FLAGS) -S -I$(INCLUDE) -o $@ -c $<
 
 $(OBJ)/%.o: $(SRC)/%.cpp
 	$(CC) $(C_FLAGS) -I$(INCLUDE) -o $@ -c $<
