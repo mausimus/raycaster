@@ -116,17 +116,17 @@ int main(void)
     }
 
     uclock_t startTime = uclock();
-/*    int      c         = 0;
+    int      c         = 0;
     for(c = 0; c < 100; c++)
     {
-        dos_draw();
+//        dos_draw();
 
         playerA += 10;
         if(playerA > 1024)
         {
             playerA -= 1024;
         }
-    }*/
+    }
     uclock_t endTime = uclock();
     done_vga_mode();
     const auto timeElapsed = 1000 * (endTime - startTime) / UCLOCKS_PER_SEC;
