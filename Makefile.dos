@@ -6,8 +6,10 @@
 # define the Cpp compiler to use
 CXX = /usr/local/djgpp/bin/i586-pc-msdosdjgpp-g++
 
+ASMFLAG =
+
 # define any compile-time flags
-CXXFLAGS	:= -Wall -Wextra -g -D MSDOS -O3 -m32 -march=i386 -mtune=i386 -fomit-frame-pointer -funroll-loops -fforce-addr
+CXXFLAGS	= -Wall -Wextra -g -D MSDOS -O3 -m32 -march=i386 -mtune=i386 -fomit-frame-pointer -funroll-loops -fforce-addr $(ASMFLAG)
 
 # define library paths in addition to /usr/lib
 #   if I wanted to include libraries not in /usr/lib I'd specify
@@ -79,3 +81,7 @@ clean:
 run: all
 	dosbox $(OUTPUTMAIN) -conf RayCaster/dosbox.conf
 	@echo Executing 'run: all' complete!
+
+asm: ASMFLAG = -S
+asm: all
+

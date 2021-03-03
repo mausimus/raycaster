@@ -1,4 +1,4 @@
-all: dos linux
+all: linux
 
 clean:
 	make -f Makefile.linux clean
@@ -15,4 +15,7 @@ dosbox:
 
 linux:
 	make -f Makefile.linux
+
+asm:
+	make -f Makefile.dos asm
 

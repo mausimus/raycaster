@@ -1,15 +1,15 @@
 #if defined(LINUX) || defined(WIN32)
 
-#    include "Game.h"
-#    include "RayCaster.h"
-#    include "RayCasterFixed.h"
-#    include "RayCasterFloat.h"
-#    include "RayCasterPrecalculator.h"
-#    include "Renderer.h"
-#    include <SDL.h>
-#    include <fstream>
-#    include <iostream>
-#    include <stdio.h>
+#include "Game.h"
+#include "RayCaster.h"
+#include "RayCasterFixed.h"
+#include "RayCasterFloat.h"
+#include "RayCasterPrecalculator.h"
+#include "Renderer.h"
+#include <SDL.h>
+#include <fstream>
+#include <iostream>
+#include <stdio.h>
 
 void DrawBuffer(SDL_Renderer* sdlRenderer, SDL_Texture* sdlTexture, uint32_t* frameBuffer, int deltaX);
 bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection);

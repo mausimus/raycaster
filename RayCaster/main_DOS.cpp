@@ -1,23 +1,23 @@
 ﻿#ifdef MSDOS
 
-#    include "RayCaster.h"
-#    include "RayCasterData.h"
-#    include "RayCasterFixed.h"
-#    include "stdio.h"
-#    include <dos.h>
-#    include <bios.h>
-#    include <dpmi.h>
-#    include <stdio.h>
-#    include <conio.h>
-#    include <math.h>
-#    include <stdlib.h>
-#    include <go32.h>
-#    include <pc.h>
-#    include <sys/nearptr.h>
-#    include <sys/sysmacros.h>
-#    include <unistd.h>
-#    include <cstring>
-#    include <time.h>
+#include "RayCaster.h"
+#include "RayCasterData.h"
+#include "RayCasterFixed.h"
+#include "stdio.h"
+#include <dos.h>
+#include <bios.h>
+#include <dpmi.h>
+#include <stdio.h>
+#include <conio.h>
+#include <math.h>
+#include <stdlib.h>
+#include <go32.h>
+#include <pc.h>
+#include <sys/nearptr.h>
+#include <sys/sysmacros.h>
+#include <unistd.h>
+#include <cstring>
+#include <time.h>
 
 uint8_t* vgamemory;
 uint8_t* vgabuffer;
@@ -58,7 +58,7 @@ void set_color(uint8_t color, uint8_t red, uint8_t green, uint8_t blue)
 int32_t  playerA = 0;
 uint32_t playerX = 23 << 8;
 uint32_t playerY = 7 << 8;
-
+/*
 RayCasterFixed rayCaster;
 
 void dos_draw()
@@ -102,7 +102,7 @@ void dos_draw()
 
     memcpy(vgamemory, vgabuffer, 64000);
 }
-
+*/
 int main(void)
 {
     int i;
@@ -116,7 +116,7 @@ int main(void)
     }
 
     uclock_t startTime = uclock();
-    int      c         = 0;
+/*    int      c         = 0;
     for(c = 0; c < 100; c++)
     {
         dos_draw();
@@ -126,7 +126,7 @@ int main(void)
         {
             playerA -= 1024;
         }
-    }
+    }*/
     uclock_t endTime = uclock();
     done_vga_mode();
     const auto timeElapsed = 1000 * (endTime - startTime) / UCLOCKS_PER_SEC;
