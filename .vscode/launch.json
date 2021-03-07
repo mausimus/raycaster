@@ -13,7 +13,10 @@
             "linux": {
                 "MIMode": "gdb",
                 "miDebuggerPath": "gdb",
-                "program": "${workspaceFolder}/bin/raycaster"
+                "program": "${workspaceFolder}/bin/raycaster",
+                "setupCommands": [
+                    { "text": "-enable-pretty-printing", "description": "enable pretty printing", "ignoreFailures": true }
+                ]
             },
             "osx": {
                 "MIMode": "lldb",

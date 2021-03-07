@@ -8,8 +8,19 @@
 class RayCasterFloat : public RayCaster
 {
 public:
-    void Start(uint32_t playerX, uint32_t playerY, int32_t playerA);
+    void                             Start(uint32_t playerX, uint32_t playerY, int32_t playerA);
     std::vector<RayCaster::TraceHit> Trace(uint32_t screenX);
+
+    struct MapBlock
+    {
+        int textureNo;
+        int height;
+    };
+
+    struct MapColumn
+    {
+        std::vector<MapBlock> blocks;
+    };
 
     RayCasterFloat();
     ~RayCasterFloat();
@@ -19,17 +30,21 @@ private:
     float _playerY;
     float _playerA;
 
-    struct DistanceHit {
-        DistanceHit(float distance, float hitOffset, int hitDirection, bool isExit) :
-         distance(distance), hitOffset(hitOffset), hitDirection(hitDirection), isExit(isExit)
-        {
-        }
+    struct DistanceHit
+    {
+        DistanceHit(float distance, float hitOffset, int hitDirection, std::vector<BoxHit> hits) :
+            distance(distance), hitOffset(hitOffset), hitDirection(hitDirection), hits(hits)
+        { }
         float distance;
         float hitOffset;
-        int hitDirection;
-        bool isExit;
+        int   hitDirection;
+
+        std::vector<BoxHit> hits;
     };
 
     std::vector<DistanceHit> Distance(float playerX, float playerY, float rayA);
-    bool  IsWall(float rayX, float rayY, float rayA, bool *isEdge);
+    std::vector<RayCasterFloat::BoxHit> FindBoxHits(RayCasterFloat::MapColumn* currentColumn,
+                                                               RayCasterFloat::MapColumn* prevColumn, bool &hadHit);
+    MapColumn*               IsWall(float rayX, float rayY, float rayA, bool* isEdge);
+    void                     InitializeMap();
 };

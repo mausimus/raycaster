@@ -85,7 +85,7 @@ void Renderer::PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t tex
 }
 
 // paint wall and connect floor/ceiling
-void Renderer::PaintLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, uint32_t* frameBuffer, int* previousPoint)
+void Renderer::PaintLevel(int x, float verticalOffset, const RayCaster::TraceHit& hit, bool isExit, uint32_t* frameBuffer, int* previousPoint)
 {
     uint32_t screenY   = hit.screenY;
     uint8_t  textureNo = hit.textureNo;
@@ -99,7 +99,7 @@ void Renderer::PaintLevel(int x, float verticalOffset, const RayCaster::TraceHit
         PaintFloor(x, pointTop, *previousPoint, frameBuffer);
     }
 
-    if(hit.isExit)
+    if(/*hit.*/isExit)
     {
         *previousPoint = pointTop;
     }
@@ -126,9 +126,12 @@ void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
         auto traces = _rc->Trace(x);
 
         // floor/ceiling tracking per level
-        int drawLevel[5];
+        /*int drawLevel[5];
         drawLevel[0] = drawLevel[1] = drawLevel[2] = drawLevel[3] = drawLevel[4] = -1;
-        int* centerLevel = drawLevel + 2;
+        int* centerLevel = drawLevel + 2;*/
+        int centerLevel[10];
+        for(int cl = 0; cl < 10; cl++)
+            centerLevel[cl] = -1;
 
         for(auto it = traces.rbegin(); it != traces.rend(); it++)
         {
@@ -136,9 +139,17 @@ void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
             uint8_t  textureNo = it->textureNo;
             uint8_t  textureX  = it->textureX;
 
-            PaintLevel(x, baseOffset + 2, *it, frameBuffer, centerLevel + 2);
-            PaintLevel(x, baseOffset - 2, *it, frameBuffer, centerLevel - 2);
-            PaintLevel(x, baseOffset, *it, frameBuffer, centerLevel);
+            //PaintLevel(x, baseOffset + 2, *it, false, frameBuffer, centerLevel + 2);
+            //PaintLevel(x, baseOffset - 2, *it, frameBuffer, centerLevel - 2);
+            if(it->boxHits.size() == 2)
+            {
+                int z = 5; z++;
+            }
+            for(const auto& bh: it->boxHits)
+            {
+                float blockOffset = baseOffset - bh.height;
+                PaintLevel(x, blockOffset, *it, bh.isExit, frameBuffer, centerLevel + bh.height);
+            }
         }
     }
 }

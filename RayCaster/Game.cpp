@@ -42,9 +42,11 @@ void Game::Move(int m, int r, int z, float seconds)
 
 Game::Game()
 {
-    playerX = 23.03f;
-    playerY = 6.8f;
-    playerA = 5.25f;
+    //playerX = 23.03f;
+    //playerY = 6.8f;
+    playerX = 5.85f;
+    playerY = 7.15f;
+    playerA = 3.65f;
     playerZ = 0;
 }
 

@@ -2,12 +2,46 @@
 
 #ifndef MSDOS
 
-#    define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
 
-#    include "RayCasterFloat.h"
-#    include <math.h>
+#include "RayCasterFloat.h"
+#include <math.h>
 
-bool RayCasterFloat::IsWall(float rayX, float rayY, float rayA, bool* isEdge)
+RayCasterFloat::MapColumn s_map[MAP_X][MAP_Y];
+
+void RayCasterFloat::InitializeMap()
+{
+    srand(432789);
+    for(int x = 0; x < MAP_X; x++)
+        for(int y = 0; y < MAP_Y; y++)
+        {
+            MapBlock b;
+            b.textureNo = 1;
+            b.height    = 0; //rand() % 4;
+            s_map[x][y] = MapColumn();
+            if(x <= 1 || y <= 1 || x >= MAP_X - 2 || y >= MAP_Y - 2)
+            {
+                s_map[x][y].blocks.push_back(b);
+            }
+            else if(x == 3 && y == 3)
+            {
+                s_map[x][y].blocks.push_back(b);
+
+                MapBlock b1;
+                b1.textureNo = 1;
+                b1.height    = 1; //rand() % 4;
+                s_map[x][y].blocks.push_back(b1);
+
+                MapBlock b2;
+                b2.textureNo = 1;
+                b2.height    = 3; //rand() % 4;
+                s_map[x][y].blocks.push_back(b2);
+            }
+            //s_map[x][y].blocks.push_back(b);
+        }
+}
+
+RayCasterFloat::MapColumn* RayCasterFloat::IsWall(float rayX, float rayY, float rayA, bool* isEdge)
 {
     float mapX    = 0;
     float mapY    = 0;
@@ -19,10 +53,58 @@ bool RayCasterFloat::IsWall(float rayX, float rayY, float rayA, bool* isEdge)
     if(tileX < 0 || tileY < 0 || tileX >= MAP_X - 1 || tileY >= MAP_Y - 1)
     {
         *isEdge = true;
-        return true;
+        return nullptr;
     }
     *isEdge = false;
-    return g_map[(tileX >> 3) + (tileY << (MAP_XS - 3))] & (1 << (8 - (tileX & 0x7)));
+
+    RayCasterFloat::MapColumn* hitCol = &s_map[tileX][tileY];
+    if(hitCol->blocks.empty())
+        return nullptr;
+
+    return hitCol;
+    //return g_map[(tileX >> 3) + (tileY << (MAP_XS - 3))] & (1 << (8 - (tileX & 0x7)));
+}
+
+std::vector<RayCasterFloat::BoxHit>
+RayCasterFloat::FindBoxHits(RayCasterFloat::MapColumn* currentColumn, RayCasterFloat::MapColumn* prevColumn, bool& hadHit)
+{
+    std::vector<BoxHit> boxHits;
+    int                 curr_idx = 0, prev_idx = 0;
+    while(curr_idx < currentColumn->blocks.size() || prev_idx < prevColumn->blocks.size())
+    {
+        if(curr_idx == currentColumn->blocks.size())
+        {
+            // we only have previous, meaning it's an exit
+            boxHits.push_back(RayCasterFloat::BoxHit(true, prevColumn->blocks[prev_idx].height));
+            prev_idx++;
+        }
+        else if(prev_idx == prevColumn->blocks.size())
+        {
+            // we only have current, meaning it's a new wall
+            boxHits.push_back(RayCasterFloat::BoxHit(false, currentColumn->blocks[curr_idx].height));
+            hadHit = true;
+            curr_idx++;
+        }
+        else if(currentColumn->blocks[curr_idx].height > prevColumn->blocks[prev_idx].height)
+        {
+            boxHits.push_back(RayCasterFloat::BoxHit(true, prevColumn->blocks[prev_idx].height));
+            prev_idx++;
+        }
+        else if(currentColumn->blocks[curr_idx].height < prevColumn->blocks[prev_idx].height)
+        {
+            boxHits.push_back(RayCasterFloat::BoxHit(false, currentColumn->blocks[curr_idx].height));
+            hadHit = true;
+            curr_idx++;
+        }
+        else
+        {
+            // still in a wall - do nothing
+            curr_idx++;
+            prev_idx++;
+            hadHit = true;
+        }
+    }
+    return boxHits;
 }
 
 std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX, float playerY, float rayA)
@@ -107,17 +189,19 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
         }
     }
 
-    float interceptX    = rayX + startDeltaX;
-    float interceptY    = rayY + startDeltaY;
-    float stepX         = fabs(tan(rayA)) * tileStepX;
-    float stepY         = fabs(1 / tan(rayA)) * tileStepY;
-    bool  verticalHit   = false;
-    bool  horizontalHit = false;
-    bool  somethingDone = false;
-    int   isTop         = 0;
-    int   isRight       = 0;
-    bool  isEdge        = false;
-    bool  hadHit        = false;
+    float                      interceptX    = rayX + startDeltaX;
+    float                      interceptY    = rayY + startDeltaY;
+    float                      stepX         = fabs(tan(rayA)) * tileStepX;
+    float                      stepY         = fabs(1 / tan(rayA)) * tileStepY;
+    bool                       verticalHit   = false;
+    bool                       horizontalHit = false;
+    bool                       somethingDone = false;
+    int                        isTop         = 0;
+    int                        isRight       = 0;
+    bool                       isEdge        = false;
+    bool                       hadHit        = false;
+    RayCasterFloat::MapColumn  emptyCol;
+    RayCasterFloat::MapColumn* prevColumn = &emptyCol;
 
     do
     {
@@ -126,13 +210,16 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
         {
             somethingDone = true;
             tileX += tileStepX;
-            auto isWall = IsWall(tileX, interceptY, rayA, &isEdge);
-            if(isWall || hadHit)
+            //auto isWall = IsWall(tileX, interceptY, rayA, &isEdge);
+            auto currentColumn = IsWall(tileX, interceptY, rayA, &isEdge);
+            if(currentColumn != nullptr || hadHit || isEdge)
             {
                 if(isEdge)
                     break;
-                if(!(isWall && hadHit))
+                //if(!(isWall && hadHit))
                 {
+                    if(currentColumn == nullptr)
+                        currentColumn = &emptyCol;
 
                     //verticalHit  = true;
                     auto hitRayX = tileX + (tileStepX == -1 ? 1 : 0);
@@ -142,8 +229,12 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
                     float deltaY = hitRayY - playerY;
                     auto  dist   = sqrt(deltaX * deltaX + deltaY * deltaY);
 
-                    hits.push_back(DistanceHit(dist, interceptY, 1, hadHit && !isWall));
-                    hadHit = isWall;
+                    auto boxHits = FindBoxHits(currentColumn, prevColumn, hadHit);
+
+                    DistanceHit dh(dist, interceptY, 1, boxHits /* hadHit && !isWall*/);
+                    hits.push_back(dh);
+                    //hadHit = isWall;
+                    prevColumn = currentColumn;
                 }
             }
             interceptY += stepY;
@@ -152,13 +243,16 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
         {
             somethingDone = true;
             tileY += tileStepY;
-            auto isWall = IsWall(interceptX, tileY, rayA, &isEdge);
-            if(isWall || hadHit)
+            auto currentColumn = IsWall(interceptX, tileY, rayA, &isEdge);
+            if(currentColumn != nullptr || hadHit || isEdge)
             {
                 if(isEdge)
                     break;
-                if(!(isWall && hadHit))
+                //if(!(isWall && hadHit))
                 {
+                    if(currentColumn == nullptr)
+                        currentColumn = &emptyCol;
+
                     //horizontalHit = true;
                     auto hitRayX = interceptX;
                     auto hitRayY = tileY + (tileStepY == -1 ? 1 : 0);
@@ -167,8 +261,14 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
                     float deltaY = hitRayY - playerY;
                     auto  dist   = sqrt(deltaX * deltaX + deltaY * deltaY);
 
-                    hits.push_back(DistanceHit(dist, interceptX, 0, hadHit && !isWall));
-                    hadHit = isWall;
+                    auto boxHits = FindBoxHits(currentColumn, prevColumn, hadHit);
+
+                    hits.push_back(DistanceHit(dist, interceptX, 0, boxHits /* hadHit && !isWall*/));
+                    //hadHit = isWall;
+                    prevColumn = currentColumn;
+
+                    /*hits.push_back(DistanceHit(dist, interceptX, 0, hadHit && !isWall));
+                    hadHit = isWall;*/
                 }
             }
             interceptX += stepX;
@@ -209,7 +309,7 @@ std::vector<RayCaster::TraceHit> RayCasterFloat::Trace(uint32_t screenX)
             screenY = 0;
         }
 
-        traces.push_back(RayCaster::TraceHit(screenY, hitDirection, textureX, hit.isExit));
+        traces.push_back(RayCaster::TraceHit(screenY, hitDirection, textureX, hit.hits));
     }
 
     return traces;
@@ -220,6 +320,8 @@ void RayCasterFloat::Start(uint32_t playerX, uint32_t playerY, int32_t playerA)
     _playerX = (playerX / 1024.0f) * 4.0f;
     _playerY = (playerY / 1024.0f) * 4.0f;
     _playerA = (playerA / 1024.0f) * 2.0f * M_PI;
+
+    InitializeMap();
 }
 
 RayCasterFloat::RayCasterFloat() : RayCaster() { }
