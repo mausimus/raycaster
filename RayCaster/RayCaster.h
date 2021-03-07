@@ -62,14 +62,17 @@ public:
 
     struct TraceHit
     {
-        TraceHit(uint32_t screenY, uint8_t textureNo, uint8_t textureX, std::vector<RayCaster::BoxHit> boxHits) : screenY(screenY), textureNo(textureNo),
-        textureX(textureX),
+        TraceHit(uint32_t screenY, uint8_t textureNo, uint8_t textureX, int hitX, int hitY,
+        std::vector<RayCaster::BoxHit> boxHits) : screenY(screenY), textureNo(textureNo),
+        textureX(textureX), hitX(hitX), hitY(hitY),
         boxHits(boxHits)
         {}
 
         uint32_t screenY;
         uint8_t textureNo;
         uint8_t textureX;
+        int hitX;
+        int hitY;
         std::vector<RayCaster::BoxHit> boxHits;
     };
 

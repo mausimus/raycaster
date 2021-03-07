@@ -32,12 +32,14 @@ private:
 
     struct DistanceHit
     {
-        DistanceHit(float distance, float hitOffset, int hitDirection, std::vector<BoxHit> hits) :
-            distance(distance), hitOffset(hitOffset), hitDirection(hitDirection), hits(hits)
+        DistanceHit(float distance, float hitOffset, int hitDirection, int hitX, int hitY, std::vector<BoxHit> hits) :
+            distance(distance), hitOffset(hitOffset), hitDirection(hitDirection), hitX(hitX), hitY(hitY), hits(hits)
         { }
         float distance;
         float hitOffset;
         int   hitDirection;
+        int hitX;
+        int hitY;
 
         std::vector<BoxHit> hits;
     };

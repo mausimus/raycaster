@@ -15,27 +15,57 @@ void RayCasterFloat::InitializeMap()
     for(int x = 0; x < MAP_X; x++)
         for(int y = 0; y < MAP_Y; y++)
         {
+            s_map[x][y] = MapColumn();
+
+            /*if(rand()%2 == 0)
+            {
+                MapBlock floor1;
+                floor1.textureNo = 0;
+                floor1.height = 1;
+                s_map[x][y].blocks.push_back(floor1);
+            }*/
+
             MapBlock b;
             b.textureNo = 1;
-            b.height    = 0; //rand() % 4;
-            s_map[x][y] = MapColumn();
+            b.height    = 1; //rand() % 4;
             if(x <= 1 || y <= 1 || x >= MAP_X - 2 || y >= MAP_Y - 2)
             {
                 s_map[x][y].blocks.push_back(b);
             }
-            else if(x == 3 && y == 3)
+            else
             {
-                s_map[x][y].blocks.push_back(b);
+                MapBlock floor;
+                floor.textureNo = 0;
+                floor.height    = 0;
+                s_map[x][y].blocks.push_back(floor);
+                if(x == 3 && y == 3)
+                {
+                    s_map[x][y].blocks.push_back(b);
 
-                MapBlock b1;
+                    MapBlock b1;
+                    b1.textureNo = 1;
+                    b1.height    = 2; //rand() % 4;
+                    s_map[x][y].blocks.push_back(b1);
+
+                    MapBlock b2;
+                    b2.textureNo = 1;
+                    b2.height    = 3; //rand() % 4;
+                    s_map[x][y].blocks.push_back(b2);
+                }
+                else if(x == 5 && y == 3)
+                {
+                    s_map[x][y].blocks.push_back(b);
+
+                    /*MapBlock b1;
                 b1.textureNo = 1;
                 b1.height    = 1; //rand() % 4;
-                s_map[x][y].blocks.push_back(b1);
+                s_map[x][y].blocks.push_back(b1);*/
 
-                MapBlock b2;
-                b2.textureNo = 1;
-                b2.height    = 3; //rand() % 4;
-                s_map[x][y].blocks.push_back(b2);
+                    MapBlock b2;
+                    b2.textureNo = 1;
+                    b2.height    = 3; //rand() % 4;
+                    s_map[x][y].blocks.push_back(b2);
+                }
             }
             //s_map[x][y].blocks.push_back(b);
         }
@@ -231,7 +261,7 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
 
                     auto boxHits = FindBoxHits(currentColumn, prevColumn, hadHit);
 
-                    DistanceHit dh(dist, interceptY, 1, boxHits /* hadHit && !isWall*/);
+                    DistanceHit dh(dist, interceptY, 1, (int)hitRayX, (int)hitRayY, boxHits);
                     hits.push_back(dh);
                     //hadHit = isWall;
                     prevColumn = currentColumn;
@@ -263,7 +293,7 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
 
                     auto boxHits = FindBoxHits(currentColumn, prevColumn, hadHit);
 
-                    hits.push_back(DistanceHit(dist, interceptX, 0, boxHits /* hadHit && !isWall*/));
+                    hits.push_back(DistanceHit(dist, interceptX, 0, (int)hitRayX, (int)hitRayY, boxHits));
                     //hadHit = isWall;
                     prevColumn = currentColumn;
 
@@ -273,7 +303,7 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
             }
             interceptX += stepX;
         }
-    } while(!isEdge && numSteps++ < 15);
+    } while(!isEdge && numSteps++ < 25);
 
     return hits;
 }
@@ -309,7 +339,7 @@ std::vector<RayCaster::TraceHit> RayCasterFloat::Trace(uint32_t screenX)
             screenY = 0;
         }
 
-        traces.push_back(RayCaster::TraceHit(screenY, hitDirection, textureX, hit.hits));
+        traces.push_back(RayCaster::TraceHit(screenY, hitDirection, textureX, hit.hitX, hit.hitY, hit.hits));
     }
 
     return traces;
