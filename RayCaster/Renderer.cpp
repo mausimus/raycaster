@@ -23,7 +23,7 @@ void Renderer::PaintFloor(int x, int startY, int endY, uint32_t* frameBuffer, in
 
     while(startY <= endY)
     {
-        frameBuffer[x + SCREEN_WIDTH * startY] = (0x00004f00) >> col; //= 0x22222222;
+        frameBuffer[x + SCREEN_WIDTH * startY] = col * 0x1000 + 0x4000;// (0x00004f00) >> col; //= 0x22222222;
         startY++;
     }
 }
@@ -300,7 +300,7 @@ void Renderer::PaintLevel(
         auto segmentsToPaint = TrimFloor(&pointTop, previousPoint);
         for(const auto &s : segmentsToPaint)
         {
-            PaintFloor(x, s.first, s.second, frameBuffer, height % 2);
+            PaintFloor(x, s.first, s.second, frameBuffer, direction < 0 ? 0 : height);
         }
     }
 

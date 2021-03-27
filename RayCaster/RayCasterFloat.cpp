@@ -253,6 +253,17 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
     RayCasterFloat::MapColumn  emptyCol;
     RayCasterFloat::MapColumn* prevColumn = &emptyCol;
 
+    // add dummy starting location hits
+    //prevColumn = IsWall(tileX, tileY, rayA, &isEdge);
+    auto startingColumn = IsWall(tileX, tileY, rayA, &isEdge);
+    auto startingHits = FindBoxHits(startingColumn, prevColumn, hadHit);
+    if(hadHit)
+    {
+        DistanceHit dh(0, interceptY, 1, (int)0, (int)0, startingHits);
+        hits.push_back(dh);        
+    }
+    prevColumn = startingColumn;
+
     do
     {
         somethingDone = false;
@@ -356,7 +367,7 @@ std::vector<RayCaster::TraceHit> RayCasterFloat::Trace(uint32_t screenX)
         }
         else
         {
-            screenY = 0;
+            screenY = 9999999;
         }
 
         traces.push_back(RayCaster::TraceHit(screenY, hitDirection, textureX, hit.hitX, hit.hitY, hit.hits));

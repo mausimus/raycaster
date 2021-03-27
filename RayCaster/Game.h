@@ -5,7 +5,7 @@
 class Game
 {
 public:
-    void Move(int m, int r, int z, float seconds);
+    void Move(int m, int r, int z, int s, float seconds);
 
     float playerX, playerY, playerZ, playerA;
     int maxPaints;

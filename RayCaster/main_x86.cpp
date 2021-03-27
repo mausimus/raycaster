@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 void DrawBuffer(SDL_Renderer* sdlRenderer, SDL_Texture* sdlTexture, uint32_t* frameBuffer, int deltaX);
-bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection, int* paintsChange);
+bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection, int* strafeDirection, int* paintsChange);
 
 using namespace std;
 
@@ -47,6 +47,7 @@ int main(int /*argc*/, char* /*args*/[])
             int               moveDirection     = 0;
             int               rotateDirection   = 0;
             int               verticalDirection = 0;
+            int               strafeDirection   = 0;
             bool              isExiting         = false;
             const static auto tickFrequency     = SDL_GetPerformanceFrequency();
             auto              tickCounter       = SDL_GetPerformanceCounter();
@@ -73,12 +74,12 @@ int main(int /*argc*/, char* /*args*/[])
 
                 if(SDL_PollEvent(&event))
                 {
-                    isExiting = ProcessEvent(event, &moveDirection, &rotateDirection, &verticalDirection, &game.maxPaints);
+                    isExiting = ProcessEvent(event, &moveDirection, &rotateDirection, &verticalDirection, &strafeDirection, &game.maxPaints);
                 }
                 const auto nextCounter = SDL_GetPerformanceCounter();
                 const auto seconds     = (nextCounter - tickCounter) / static_cast<float>(tickFrequency);
                 tickCounter            = nextCounter;
-                game.Move(moveDirection, rotateDirection, verticalDirection, seconds);
+                game.Move(moveDirection, rotateDirection, verticalDirection, strafeDirection, seconds);
             }
             SDL_DestroyTexture(floatTexture);
             SDL_DestroyTexture(fixedTexture);
@@ -109,7 +110,7 @@ void DrawBuffer(SDL_Renderer* sdlRenderer, SDL_Texture* sdlTexture, uint32_t* fb
     SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, &r);
 }
 
-bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection, int* maxPaints)
+bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection, int* strafeDirection, int* maxPaints)
 {
     if(event.type == SDL_QUIT)
     {
@@ -141,6 +142,12 @@ bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirecti
             break;
         case SDLK_z:
             *verticalDirection = p ? -1 : 0;
+            break;
+        case SDLK_q:
+            *strafeDirection = p ? 1 : 0;
+            break;
+        case SDLK_e:
+            *strafeDirection = p ? -1 : 0;
             break;
         case SDLK_LEFTBRACKET:
             if(event.type == SDL_KEYDOWN)
