@@ -254,13 +254,12 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
     RayCasterFloat::MapColumn* prevColumn = &emptyCol;
 
     // add dummy starting location hits
-    //prevColumn = IsWall(tileX, tileY, rayA, &isEdge);
     auto startingColumn = IsWall(tileX, tileY, rayA, &isEdge);
-    auto startingHits = FindBoxHits(startingColumn, prevColumn, hadHit);
+    auto startingHits   = FindBoxHits(startingColumn, prevColumn, hadHit);
     if(hadHit)
     {
         DistanceHit dh(0, interceptY, 1, (int)0, (int)0, startingHits);
-        hits.push_back(dh);        
+        hits.push_back(dh);
     }
     prevColumn = startingColumn;
 
@@ -291,10 +290,12 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
                     auto  dist   = sqrt(deltaX * deltaX + deltaY * deltaY);
 
                     auto boxHits = FindBoxHits(currentColumn, prevColumn, hadHit);
-
-                    DistanceHit dh(dist, interceptY, 1, (int)hitRayX, (int)hitRayY, boxHits);
-                    hits.push_back(dh);
-                    //hadHit = isWall;
+                    if(boxHits.size())
+                    {
+                        DistanceHit dh(dist, interceptY, 1, (int)hitRayX, (int)hitRayY, boxHits);
+                        hits.push_back(dh);
+                        //hadHit = isWall;
+                    }
                     prevColumn = currentColumn;
                 }
             }
@@ -323,9 +324,11 @@ std::vector<RayCasterFloat::DistanceHit> RayCasterFloat::Distance(float playerX,
                     auto  dist   = sqrt(deltaX * deltaX + deltaY * deltaY);
 
                     auto boxHits = FindBoxHits(currentColumn, prevColumn, hadHit);
-
-                    hits.push_back(DistanceHit(dist, interceptX, 0, (int)hitRayX, (int)hitRayY, boxHits));
-                    //hadHit = isWall;
+                    if(boxHits.size())
+                    {
+                        hits.push_back(DistanceHit(dist, interceptX, 0, (int)hitRayX, (int)hitRayY, boxHits));
+                        //hadHit = isWall;
+                    }
                     prevColumn = currentColumn;
 
                     /*hits.push_back(DistanceHit(dist, interceptX, 0, hadHit && !isWall));
