@@ -23,7 +23,7 @@ void Renderer::PaintFloor(int x, int startY, int endY, uint32_t* frameBuffer, in
 
     while(startY <= endY)
     {
-        frameBuffer[x + SCREEN_WIDTH * startY] = (0x00004f00) >> col;//= 0x22222222;
+        frameBuffer[x + SCREEN_WIDTH * startY] = (0x00004f00) >> col; //= 0x22222222;
         startY++;
     }
 }
@@ -34,6 +34,8 @@ void Renderer::PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t tex
     {
         return;
     }
+
+    //wallHeight++; // TODO: DELETEME
 
     uint32_t* lineBuffer  = frameBuffer + x;
     uint32_t  textureY    = 0;
@@ -66,11 +68,20 @@ void Renderer::PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t tex
     uint32_t   texturePos = textureY;
 
     auto startPixel = (int)topOffset;
-    auto endPixel = (int)(topOffset + visibleSize);
+    auto endPixel   = (int)(topOffset + visibleSize - 1);
     if(!TrimPaint(&startPixel, &endPixel))
     {
         return;
     }
+    /*
+    if(startPixel < 0)
+    startPixel = 0;
+    if(endPixel < 0)
+    endPixel = 0;
+    if(startPixel >= SCREEN_HEIGHT)
+    startPixel = SCREEN_HEIGHT - 1;
+if(endPixel >= SCREEN_HEIGHT)
+endPixel = SCREEN_HEIGHT -1 ;*/
 
     // paint wall
     lineBuffer += SCREEN_WIDTH * topOffset;
@@ -99,6 +110,99 @@ void Renderer::PaintWall(int x, int centerLine, uint32_t wallHeight, uint8_t tex
 }
 
 int zbuffer[SCREEN_HEIGHT];
+
+std::vector<std::pair<int, int>> Renderer::TrimFloor(int* sy, int* ey)
+{
+    std::vector<std::pair<int, int>> visibleSegments;
+
+    if(*sy > *ey)
+    {
+        return TrimFloor(ey, sy);
+    }
+
+    if(*sy == *ey)
+    {
+        return visibleSegments;
+    }
+
+    if(*sy < 0)
+        *sy = 0;
+
+    if(*ey < 0)
+        *ey = 0;
+
+    if(*ey >= SCREEN_HEIGHT)
+        *ey = SCREEN_HEIGHT - 1;
+
+    if(*sy >= SCREEN_HEIGHT)
+        *sy = SCREEN_HEIGHT - 1;
+
+    if(*sy == *ey)
+    {
+        return visibleSegments;
+    }
+
+    // find first open pixel
+    while(zbuffer[*sy] == 1 && *sy < SCREEN_HEIGHT && *sy < *ey)
+    {
+        *sy = *sy + 1;
+    }
+    if(*sy == SCREEN_HEIGHT || *sy == *ey)
+    {
+        // no open pixels
+        return visibleSegments;
+    }
+
+    // find last open pixel
+    while(zbuffer[*ey] == 1 && *ey >= 0 && *ey > *sy)
+    {
+        *ey = *ey - 1;
+    }
+    if(*ey < 0 || *sy == *ey)
+    {
+        // no open pixels
+        return visibleSegments;
+    }
+
+    if(*sy == *ey)
+    {
+        // TODO: handle no drawing at all
+        //zbuffer[*sy] = 1;
+        return visibleSegments;
+    }
+
+    int cs = *sy;
+    while(cs < SCREEN_HEIGHT && cs < *ey)
+    {
+        while(zbuffer[cs] == 1 && cs < SCREEN_HEIGHT && cs <= *ey)
+        {
+            cs++;
+        }
+
+        if(cs == SCREEN_HEIGHT || cs == *ey)
+        {
+            // reached the end
+            return visibleSegments;
+        }
+
+        int ce = cs;
+        while(zbuffer[ce] == 0 && ce < SCREEN_HEIGHT && ce <= *ey)
+        {
+            // we are in drawing area
+            zbuffer[ce] = 1;
+            ce++;
+        }
+        visibleSegments.push_back(std::make_pair(cs, ce - 1));
+        cs = ce;
+    }
+
+    /*for(int zy = *sy; zy <= *ey; zy++)
+    {
+        zbuffer[zy] = 1;
+    }*/
+
+    return visibleSegments;
+}
 
 // trim draw area to only areas not drawn before
 bool Renderer::TrimPaint(int* sy, int* ey)
@@ -137,13 +241,29 @@ bool Renderer::TrimPaint(int* sy, int* ey)
     }
 
     while(zbuffer[*sy] == 1 && *sy < SCREEN_HEIGHT && *sy < *ey)
-    {        
+    {
         *sy = *sy + 1;
     }
+    /*if(*sy > 0 && zbuffer[*sy] == 0)
+        (*sy)--;*/
     while(zbuffer[*ey] == 1 && *ey >= 0 && *ey > *sy)
     {
         *ey = *ey - 1;
     }
+    /*if(*ey < SCREEN_HEIGHT - 1 && zbuffer[*ey] == 0)
+        (*ey)++;*/
+
+    if(*sy < 0)
+        *sy = 0;
+
+    if(*ey < 0)
+        *ey = 0;
+
+    if(*ey >= SCREEN_HEIGHT)
+        *ey = SCREEN_HEIGHT - 1;
+
+    if(*sy >= SCREEN_HEIGHT)
+        *sy = SCREEN_HEIGHT - 1;        
 
     if(*sy == *ey)
     {
@@ -162,29 +282,29 @@ bool Renderer::TrimPaint(int* sy, int* ey)
 
 // paint wall and connect floor/ceiling
 void Renderer::PaintLevel(
-    int x, float verticalOffset, const RayCaster::TraceHit& hit, bool isExit, uint32_t* frameBuffer, int* previousPoint)
+    int x, float verticalOffset, const RayCaster::TraceHit& hit, bool isExit, uint32_t* frameBuffer, int* previousPoint, int height)
 {
     uint32_t screenY   = hit.screenY;
     uint8_t  textureNo = hit.textureNo;
     uint8_t  textureX  = hit.textureX;
 
-    auto direction  = verticalOffset >= 0 ? 1 : -1;
-    auto centerLine = static_cast<int>(round(HORIZON_HEIGHT + ((2 * verticalOffset * (int)screenY) / 256.0f)));
-    auto pointTop    = centerLine - direction * (((int)screenY * 2) / 256) / 2;
-    auto pointBottom   = centerLine + direction * (((int)screenY * 2) / 256) / 2;
+    // verticalOffset is positive if block is above us
+    auto direction  = verticalOffset >= 0 ? -1 : 1;
+    float floatHeight = 2.0f * screenY / 256.0f;
+    int  centerLine = HORIZON_HEIGHT - static_cast<int>(round(floatHeight * verticalOffset));
+    int wallHeight = static_cast<int>(round(floatHeight)) + 1; // +1 to remove fpoin inacurr
+    int  pointTop   = centerLine - direction * wallHeight / 2;
 
     if(*previousPoint != -1)
     {
-        // fills in from previousPoint to pointTop
-        if(TrimPaint(&pointTop, previousPoint))
+        auto segmentsToPaint = TrimFloor(&pointTop, previousPoint);
+        for(const auto &s : segmentsToPaint)
         {
-            PaintFloor(x, pointTop, *previousPoint, frameBuffer, 0/*(hit.hitX + hit.hitY) % 2*/);
+            PaintFloor(x, s.first, s.second, frameBuffer, height % 2);
         }
     }
 
     // fills in center +/- half height
-    //auto centerLine = HORIZON_HEIGHT + ((2 * verticalOffset * (int)screenY) / 256);
-    auto wallHeight = (screenY * 2) >> 8;
     PaintWall(x, centerLine, wallHeight, textureNo, textureX, frameBuffer);
 
     if(!isExit)
@@ -197,8 +317,6 @@ void Renderer::PaintLevel(
     }
 }
 
-int framePaints = 5;
-
 void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
 {
     // clear frame
@@ -208,15 +326,10 @@ void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
                static_cast<uint32_t>(g->playerY * 256.0f),
                static_cast<int32_t>(g->playerA / (2.0f * M_PI) * 1024.0f));
 
-    float baseOffset = g->playerZ * 32;
-    framePaints++;
-    if(framePaints > 10)
-        framePaints = 0;
+    float eyeLevel = g->playerZ * 32;
 
     for(int x = 0; x < SCREEN_WIDTH; x++)
     {
-        int maxPaints = framePaints;
-
         for(int y = 0; y < SCREEN_HEIGHT; y++)
             zbuffer[y] = 0;
 
@@ -226,8 +339,12 @@ void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
         for(int cl = 0; cl < 10; cl++)
             centerLevel[cl] = -1;
 
+        int numPaints = 0;
         for(auto it = traces.begin(); it != traces.end(); it++)
         {
+            if(g->maxPaints != 0 && numPaints++ >= g->maxPaints)
+                break;
+
             uint32_t screenY   = it->screenY;
             uint8_t  textureNo = it->textureNo;
             uint8_t  textureX  = it->textureX;
@@ -237,11 +354,18 @@ void Renderer::TraceFrame(Game* g, uint32_t* frameBuffer)
                 int z = 5;
                 z++;
             }
-            for(const auto& bh : it->boxHits)
+
+            for(auto bh = it->boxHits.begin(); bh != it->boxHits.end(); bh++)
             {
-                float blockOffset = baseOffset - bh.height;
-                //if(maxPaints--)
-                    PaintLevel(x, blockOffset, *it, bh.isExit, frameBuffer, centerLevel + bh.height);
+                float blockOffset = bh->height - eyeLevel;
+                if(blockOffset >= 0)
+                    PaintLevel(x, blockOffset, *it, bh->isExit, frameBuffer, centerLevel + bh->height, bh->height);
+            }
+            for(auto bh = it->boxHits.rbegin(); bh != it->boxHits.rend(); bh++)
+            {
+                float blockOffset = bh->height - eyeLevel;
+                if(blockOffset < 0)
+                    PaintLevel(x, blockOffset, *it, bh->isExit, frameBuffer, centerLevel + bh->height, bh->height);
             }
         }
     }

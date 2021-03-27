@@ -12,7 +12,7 @@
 #include <stdio.h>
 
 void DrawBuffer(SDL_Renderer* sdlRenderer, SDL_Texture* sdlTexture, uint32_t* frameBuffer, int deltaX);
-bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection);
+bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection, int* paintsChange);
 
 using namespace std;
 
@@ -69,10 +69,11 @@ int main(int /*argc*/, char* /*args*/[])
                 //DrawBuffer(sdlRenderer, fixedTexture, fixedBuffer, SCREEN_WIDTH + 1);
 
                 SDL_RenderPresent(sdlRenderer);
+                //SDL_Delay(100);
 
                 if(SDL_PollEvent(&event))
                 {
-                    isExiting = ProcessEvent(event, &moveDirection, &rotateDirection, &verticalDirection);
+                    isExiting = ProcessEvent(event, &moveDirection, &rotateDirection, &verticalDirection, &game.maxPaints);
                 }
                 const auto nextCounter = SDL_GetPerformanceCounter();
                 const auto seconds     = (nextCounter - tickCounter) / static_cast<float>(tickFrequency);
@@ -108,7 +109,7 @@ void DrawBuffer(SDL_Renderer* sdlRenderer, SDL_Texture* sdlTexture, uint32_t* fb
     SDL_RenderCopy(sdlRenderer, sdlTexture, NULL, &r);
 }
 
-bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection)
+bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirection, int* verticalDirection, int* maxPaints)
 {
     if(event.type == SDL_QUIT)
     {
@@ -141,6 +142,20 @@ bool ProcessEvent(const SDL_Event& event, int* moveDirection, int* rotateDirecti
         case SDLK_z:
             *verticalDirection = p ? -1 : 0;
             break;
+        case SDLK_LEFTBRACKET:
+            if(event.type == SDL_KEYDOWN)
+                (*maxPaints)--;
+            break;
+        case SDLK_RIGHTBRACKET:
+            if(event.type == SDL_KEYDOWN)
+                (*maxPaints)++;
+            break;
+        case SDLK_p:
+            *maxPaints = 0;
+            break;
+        /*case SDLK_p:
+            *maxPaints = 5;
+            break;*/
         default:
             break;
         }

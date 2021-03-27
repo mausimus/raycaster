@@ -66,6 +66,26 @@ void RayCasterFloat::InitializeMap()
                     b2.height    = 3; //rand() % 4;
                     s_map[x][y].blocks.push_back(b2);
                 }
+                else if(x >= 8 && x <= 12)
+                {
+                    switch(y)
+                    {
+                    case 4: {
+                        MapBlock b2;
+                        b2.textureNo = 1;
+                        b2.height    = 2;
+                        s_map[x][y].blocks.push_back(b2);
+                        break;
+                    }
+                    case 3:
+                    case 5:
+                        MapBlock b2;
+                        b2.textureNo = 1;
+                        b2.height    = 1;
+                        s_map[x][y].blocks.push_back(b2);
+                        break;
+                    }
+                }
             }
             //s_map[x][y].blocks.push_back(b);
         }

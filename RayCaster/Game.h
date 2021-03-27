@@ -8,6 +8,7 @@ public:
     void Move(int m, int r, int z, float seconds);
 
     float playerX, playerY, playerZ, playerA;
+    int maxPaints;
 
     Game();
     ~Game();

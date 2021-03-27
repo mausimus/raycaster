@@ -14,7 +14,7 @@ public:
     struct MapBlock
     {
         int textureNo;
-        int height;
+        int height; // vertical position
     };
 
     struct MapColumn

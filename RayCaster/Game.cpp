@@ -48,6 +48,7 @@ Game::Game()
     playerY = 7.15f;
     playerA = 3.65f;
     playerZ = 0;
+    maxPaints = 0;
 }
 
 Game::~Game() {}
